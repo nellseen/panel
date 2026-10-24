@@ -14,6 +14,7 @@ import (
 	"github.com/termux-nodepanel/nodepanel/internal/runtime"
 	"github.com/termux-nodepanel/nodepanel/internal/server"
 	"github.com/termux-nodepanel/nodepanel/internal/storage"
+	"github.com/termux-nodepanel/nodepanel/internal/web"
 )
 
 // Version info
@@ -124,13 +125,13 @@ func serveFrontend(mux *http.ServeMux) {
 		return
 	}
 
-	// Fallback minimal welcome page if UI has not been built yet
+	// Serve embedded assets directly compiled into the Go binary
+	embeddedHandler := web.AssetHandler()
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if strings.HasPrefix(r.URL.Path, "/api") || r.URL.Path == "/ws" {
 			return
 		}
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		fmt.Fprint(w, `<!DOCTYPE html><html><head><title>Termux NodePanel</title></head><body style="background:#0f172a;color:#f8fafc;font-family:sans-serif;padding:2rem;"><h1>Termux NodePanel API Online</h1><p>Frontend static assets not built yet. Run <code>npm run build</code> to compile web dashboard.</p><p><a href="/api/health" style="color:#38bdf8;">/api/health</a> | <a href="/api/runtime" style="color:#38bdf8;">/api/runtime</a></p></body></html>`)
+		embeddedHandler.ServeHTTP(w, r)
 	})
 }
 
